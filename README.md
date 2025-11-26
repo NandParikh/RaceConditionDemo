@@ -1,3 +1,8 @@
+---
+What is Race condition?
+---
+- Race conditions happen when multiple threads access shared data at the same time, leading to unpredictable results.
+
 ```Swift
 import UIKit
 /*
