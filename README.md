@@ -59,3 +59,11 @@ class ViewController: UIViewController {
 }
 
 ```
+
+| Method               | Good                        | Avoid when                      |
+| -------------------- | --------------------------- | ------------------------------- |
+| NSLock               | Simple, fast                | Can deadlock if misused         |
+| Semaphore            | General concurrency control | More complex for simple locking |
+| Serial DispatchQueue | Clean, easy                 | Slight overhead                 |
+| Actor                | Modern & safest             | Requires async/await            |
+
