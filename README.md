@@ -72,3 +72,122 @@ class ViewController: UIViewController {
 | Serial DispatchQueue | Clean, easy                 | Slight overhead                 |
 | Actor                | Modern & safest             | Requires async/await            |
 
+
+You’re right — this code does create a race condition if the queue.sync is removed or if access to balance is not isolated — because multiple threads can read & write simultaneously.
+
+But in modern Swift, the cleanest & safest solution is using an actor — because actors automatically provide data isolation without needing locks or DispatchQueues.
+
+⸻
+
+✅ Actor-based Version (Best modern Swift)
+```Swift
+actor Bank {
+    var balance = 0
+    
+    func deposit(_ amount: Int) {
+        balance += amount
+    }
+}
+```
+And the caller:
+```Swift
+class ViewController: UIViewController {
+
+    @IBAction func btnClick(_ sender: UIButton) {
+
+        let bank = Bank()
+
+        Task.detached {
+            for _ in 1...10000 { await bank.deposit(1) }
+        }
+
+        Task.detached {
+            for _ in 1...10000 { await bank.deposit(1) }
+        }
+
+        Task {
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+            let finalBalance = await bank.balance
+            print("❗ Final Balance:", finalBalance)
+            print("Expected should be: 20000")
+        }
+    }
+}
+
+```
+⸻
+
+Why actor solves the race condition
+
+Inside an actor:
+	- Only one task at a time can access its stored properties.
+	- No two deposit() calls run simultaneously.
+	- You don’t need locks
+	- You don’t need queues
+	- You don’t need sync / barriers
+
+This is the guarantee:
+
+Actor ensures serialized access to its state.
+
+⸻
+
+Explanation for Interview 🔥
+
+If asked: Why use actor instead of DispatchQueue or locks?
+
+Answer:
+
+Actors provide structured concurrency and automatic data isolation. Unlike locks or queues, actors eliminate human error — you cannot accidentally access balance concurrently. The compiler enforces thread-safe access using await. This results in safer concurrent code with simplified syntax.
+
+⸻
+
+Accessing Actor Properties
+
+❗ Direct property read also requires await
+```Swift
+let value = await bank.balance
+```
+Because reading is also part of state access.
+
+⸻
+
+Important: Calling actor from UI thread
+
+You must use async:
+```Swift
+Task {
+    let b = await bank.balance
+    print(b)
+}
+```
+
+⸻
+
+Optional — Make deposit return the updated balance
+```Swift
+actor Bank {
+    private(set) var balance = 0
+    
+    @discardableResult
+    func deposit(_ amount: Int) -> Int {
+        balance += amount
+        return balance
+    }
+}
+```
+Usage:
+```Swift
+let value = await bank.deposit(10)
+```
+
+⸻
+
+Summary
+
+Approach	Safe	Easy	Compiler-checked	Recommended in 2025
+Using locks (NSLock)	Yes	❌	❌	❌
+Using GCD queue	Yes	✔️	❌	❌
+Using actor	✔️	✔️✔️✔️	✔️	⭐ BEST ⭐
+
+---
