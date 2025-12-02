@@ -184,10 +184,10 @@ let value = await bank.deposit(10)
 ⸻
 
 Summary
-
+```Swift
 Approach	Safe	Easy	Compiler-checked	Recommended in 2025
 Using locks (NSLock)	Yes	❌	❌	❌
 Using GCD queue	Yes	✔️	❌	❌
 Using actor	✔️	✔️✔️✔️	✔️	⭐ BEST ⭐
-
+```
 ---
